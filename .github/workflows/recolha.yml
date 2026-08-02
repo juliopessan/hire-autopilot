@@ -1,0 +1,97 @@
+name: Recolher vagas e publicar
+
+on:
+  schedule:
+    # 07:00 UTC todos os dias (08:00 em Londres no horário de verão)
+    - cron: '0 7 * * *'
+  workflow_dispatch:          # permite correr à mão pelo separador Actions
+  push:
+    branches: [main]
+    paths:
+      - 'site/template.html'
+      - 'build_site.py'
+      - '.github/workflows/recolha.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  recolher:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Instalar dependências
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Recuperar acompanhamento anterior
+        uses: actions/cache/restore@v4
+        with:
+          path: results/kanban_state.json
+          key: kanban-${{ github.run_id }}
+          restore-keys: kanban-
+
+      - name: Recolher vagas
+        id: recolha
+        continue-on-error: true
+        run: |
+          mkdir -p results
+          python3 run_real.py 2>&1 | tee recolha.log
+          echo "vagas=$(ls results/real_suitable_*.csv 2>/dev/null | wc -l)" >> "$GITHUB_OUTPUT"
+
+      - name: Gerar site
+        run: |
+          if ls results/real_all_*.csv >/dev/null 2>&1; then
+            python3 build_site.py
+          else
+            echo "::warning::Recolha não produziu dados - a publicar página vazia"
+            python3 build_site.py --vazio
+          fi
+
+      - name: Guardar acompanhamento
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: results/kanban_state.json
+          key: kanban-${{ github.run_id }}
+
+      - name: Guardar registo da recolha
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: registo-recolha
+          path: |
+            recolha.log
+            results/*.csv
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/dist
+
+  publicar:
+    needs: recolher
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

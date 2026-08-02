@@ -15,6 +15,9 @@ results/
 *.csv
 screenshots/
 
+# Site gerado - o build corre no CI a cada recolha
+site/dist/
+
 # Virtual environment
 .venv/
 venv/
