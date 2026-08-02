@@ -1,0 +1,56 @@
+# ---- DADOS PESSOAIS - nunca commitar ----
+# Perfil real do candidato (nome, e-mail, telefone, CV)
+profile_local.py
+profile.local.py
+
+# CV e documentos
+data/
+*.pdf
+*.doc
+*.docx
+
+# Resultados: contem vagas coletadas, notas do processo seletivo
+# e o estado do Kanban (para qual vaga a pessoa foi chamada, quando)
+results/
+*.csv
+screenshots/
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
