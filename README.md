@@ -1,8 +1,28 @@
 # hire-autopilot
 
+**→ [juliopessan.github.io/hire-autopilot](https://juliopessan.github.io/hire-autopilot/)**
+
 Agregador de vagas de hospitality em Greater Manchester (UK), com pontuação por perfil e Kanban de acompanhamento do processo seletivo.
 
 Feito para quem procura o **primeiro emprego**: o scoring privilegia vagas de entrada e descarta cargos sênior, e sinaliza vagas que envolvem álcool — relevante para candidatos menores de 18 anos no Reino Unido.
+
+A coleta roda sozinha todo dia às 07:00 UTC pelo GitHub Actions e republica a página. Quem só quer acompanhar as vagas usa a URL acima — não precisa instalar nada.
+
+---
+
+## A página pública
+
+| O que tem | Detalhe |
+|---|---|
+| Quadro de fases | Toque num cartão para ver detalhes, abrir o anúncio ou mudar de fase |
+| Guarda de CV | Fica no navegador (IndexedDB), não sobe para servidor nenhum |
+| Origem das vagas | Quantas entraram por portal e quantas ficaram fora da região |
+| Descartadas | O que foi filtrado e por qual regra — serve para pegar erro de filtro |
+| Exportar | CSV com as fases e notas |
+
+**Limite:** sem backend, as fases e o CV vivem no navegador de cada pessoa e **não sincronizam entre aparelhos**. Funciona bem para uma pessoa acompanhar o próprio processo. Duas pessoas acompanhando juntas exigiria banco de dados.
+
+Vagas com processo em andamento **sobrevivem ao anúncio sair do ar** — sem isso, uma vaga em "Entrevista" desapareceria do quadro quando saísse da coleta. Ela reaparece marcada como arquivada. Vagas expiradas ainda em "Encontrada" somem, para não acumular lixo.
 
 ---
 
@@ -147,11 +167,19 @@ scoring.py              pontuação por perfil
 job_deduplicator.py     dedup entre plataformas
 kanban_store.py         estado do Kanban (persistente)
 kanban_cli.py           CLI de acompanhamento
-visualizer_pro.py       dashboard HTML
+visualizer_pro.py       dashboard HTML local
 run_real.py             pipeline completo
+build_site.py           gera a página pública
+site/template.html      template da página
 candidate.py            estrutura do perfil
 profile.example.py      modelo de perfil
+.github/workflows/
+  recolha.yml           cron diário: coleta → build → publica
 ```
+
+### Por que GitHub Pages e não Vercel
+
+Playwright precisa de Chromium, que estoura o limite de tamanho das serverless functions da Vercel e o timeout de execução. O Actions roda o navegador sem essas restrições, gera a página estática e o Pages serve. Uma página no browser também não conseguiria fazer a coleta sozinha: os portais não liberam CORS.
 
 Utilitários de diagnóstico, úteis ao adicionar uma plataforma nova:
 
